@@ -1,0 +1,2 @@
+{"manifest_version":3,"name":"Anime Remote Bridge","version":"2.5.0","description":"Collega il telecomando iPhone a una scheda Chrome scelta.","permissions":["tabs","storage","debugger"],"host_permissions":["http://127.0.0.1:8765/*","http://localhost:8765/*"],"background":{"service_worker":"background.js"},"action":{"default_popup":"popup.html","default_title":"Anime Remote"},"content_scripts":[{"matches":["http://*/*","https://*/*"],"all_frames":true,"match_about_blank":true,"match_origin_as_fallback":true,"js":["content.js"],"run_at":"document_idle"}]}
+

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Anime Remote</title>
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #090d14;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .remote {
+      width: min(94vw, 430px);
+      padding: 22px 18px 26px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      margin: 0 0 6px;
+    }
+    .status {
+      text-align: center;
+      color: #8e9aaa;
+      font-size: 13px;
+      margin-bottom: 22px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    button {
+      border: 0;
+      border-radius: 16px;
+      min-height: 78px;
+      background: #182334;
+      color: white;
+      font-size: 18px;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(0,0,0,.25);
+    }
+    button:active {
+      transform: scale(.96);
+      background: #243653;
+    }
+    .big {
+      grid-column: 1 / -1;
+      min-height: 92px;
+      font-size: 24px;
+      background: #1e5eff;
+    }
+    .next {
+      background: #164d3c;
+    }
+    .prev {
+      background: #49301a;
+    }
+    .seek { font-size: 17px; }
+    .small { font-size: 16px; }
+  </style>
+</head>
+<body>
+  <main class="remote">
+    <h1>🎬 Anime Remote</h1>
+    <div class="status" id="status">Connesso al PC</div>
+
+    <div class="grid">
+      <button class="prev" onclick="send('previous')">⏮<br>Precedente</button>
+      <button class="next" onclick="send('next')">Successivo<br>⏭</button>
+
+      <button class="big" onclick="send('play_pause')">▶️ / ⏸</button>
+
+      <button class="seek" onclick="send('back10')">⏪ 10 s</button>
+      <button class="seek" onclick="send('forward10')">10 s ⏩</button>
+
+      <button class="small" onclick="send('volume_down')">🔉 Volume −</button>
+      <button class="small" onclick="send('volume_up')">🔊 Volume +</button>
+
+      <button class="small" onclick="send('mute')">🔇 Mute</button>
+      <button class="small" onclick="send('fullscreen')">⛶ Fullscreen</button>
+    </div>
+  </main>
+
+  <script>
+    async function send(command) {
+      const status = document.getElementById("status");
+      try {
+        const response = await fetch("/command", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({command})
+        });
+
+        if (!response.ok) throw new Error("server error");
+
+        status.textContent = "✓ Comando inviato";
+        setTimeout(() => status.textContent = "Connesso al PC", 700);
+      } catch {
+        status.textContent = "⚠️ PC non raggiungibile";
+      }
+    }
+  </script>
+</body>
+</html>
