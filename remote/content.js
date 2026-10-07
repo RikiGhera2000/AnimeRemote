@@ -45,14 +45,51 @@ function clickEpisode(direction) {
   else console.warn(`[Anime Remote] Pulsante episodio ${direction} non trovato in questo frame`);
 }
 
+function findPlaybackControl(video, action) {
+  const labels = action === "play"
+    ? ["play", "riproduci", "avvia", "resume"]
+    : ["pause", "pausa", "stop"];
+  const selector = 'button, [role="button"], .plyr__control, .vjs-play-control, .jw-icon-playback';
+  const roots = [];
+  let node = video;
+  for (let i = 0; node && i < 7; i++, node = node.parentElement) {
+    roots.push(node);
+    if (node.shadowRoot) roots.push(node.shadowRoot);
+  }
+  roots.push(video.ownerDocument);
+  const seen = new Set();
+  for (const root of roots) {
+    if (!root.querySelectorAll) continue;
+    for (const element of root.querySelectorAll(selector)) {
+      if (seen.has(element)) continue;
+      seen.add(element);
+      const label = [element.getAttribute("aria-label"), element.getAttribute("title"),
+        element.getAttribute("data-title"), element.getAttribute("data-plyr"),
+        element.getAttribute("data-action"), element.className, element.innerText]
+        .filter(Boolean).join(" ").toLowerCase();
+      if (labels.some((word) => label.includes(word))) return element;
+    }
+  }
+  return null;
+}
+
+async function togglePlayback(video) {
+  const wasPaused = video.paused;
+  const button = findPlaybackControl(video, wasPaused ? "play" : "pause");
+  if (button) button.click();
+  else video.click();
+  await new Promise((resolve) => setTimeout(resolve, 180));
+  if (video.paused === wasPaused) {
+    if (wasPaused) await video.play().catch((error) => console.warn("[Anime Remote] Play bloccato dal sito", error));
+    else video.pause();
+  }
+}
 async function handleCommand(command) {
   const video = getVideo();
   switch (command) {
     case "play_pause":
-      if (video) {
-        if (video.paused) await video.play().catch((error) => console.warn("[Anime Remote] Play bloccato dal sito", error));
-        else video.pause();
-      } else sendKey(" ", "Space");
+      if (video) await togglePlayback(video);
+      else sendKey(" ", "Space");
       break;
     case "back10":
       if (video) video.currentTime = Math.max(0, video.currentTime - 10);
@@ -130,3 +167,5 @@ chrome.storage.local.get(["keepPlayerFullscreen"], ({ keepPlayerFullscreen }) =>
 if (window.top === window) {
   setInterval(() => chrome.runtime.sendMessage({ type: "poll-linked-tab" }, () => void chrome.runtime.lastError), 500);
 }
+
+
